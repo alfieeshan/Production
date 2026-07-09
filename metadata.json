@@ -1,0 +1,6 @@
+{
+  "name": "Mobile Showcase Admin Panel",
+  "description": "A handcrafted, high-performance SaaS dashboard built to manage products and images for the Mobile Phone Showcase website using Supabase database and storage.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
