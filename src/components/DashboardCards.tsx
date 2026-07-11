@@ -1,5 +1,5 @@
 import React from 'react';
-import { Package, CheckCircle2, XCircle, , Phone, DollarSign } from 'lucide-react';
+import { Package, CheckCircle2, XCircle, Phone, DollarSign } from 'lucide-react';
 import { DashboardStats, Product } from '../types';
 
 interface DashboardCardsProps {
@@ -71,7 +71,7 @@ export function DashboardCards({ stats, onViewProduct }: DashboardCardsProps) {
       <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-xs flex flex-col justify-between md:col-span-2 lg:col-span-1">
         <div className="flex items-center justify-between mb-3">
           <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1">
-            < className="w-3.5 h-3.5 text-amber-500 fill-amber-500" /> Latest Product
+            Latest Product
           </span>
           {stats.latest && (
             <span className="text-[10px] bg-emerald-50 text-emerald-700 font-medium px-2 py-0.5 rounded-full border border-emerald-100">
