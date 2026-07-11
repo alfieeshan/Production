@@ -31,9 +31,10 @@ interface ProductFormProps {
   onSubmit: (data: ProductFormValues) => void;
   onCancel: () => void;
   onPreview?: (data: ProductFormValues) => void;
+  isDemo?: boolean;
 }
 
-export function ProductForm({ product, onSubmit, onCancel, onPreview }: ProductFormProps) {
+export function ProductForm({ product, onSubmit, onCancel, onPreview, isDemo = false }: ProductFormProps) {
   const {
     register,
     handleSubmit,
@@ -162,7 +163,7 @@ export function ProductForm({ product, onSubmit, onCancel, onPreview }: ProductF
               name="images"
               control={control}
               render={({ field }) => (
-                <ImageUploader images={field.value} onChangeImages={field.onChange} />
+                <ImageUploader images={field.value} onChangeImages={field.onChange} isDemo={isDemo} />
               )}
             />
             {errors.images && (

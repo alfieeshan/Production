@@ -8,6 +8,8 @@ interface EmptyStateProps {
   actionLabel?: string;
   onAction?: () => void;
   errorDetails?: string;
+  secondaryActionLabel?: string;
+  onSecondaryAction?: () => void;
 }
 
 export function EmptyState({
@@ -17,6 +19,8 @@ export function EmptyState({
   actionLabel,
   onAction,
   errorDetails,
+  secondaryActionLabel,
+  onSecondaryAction,
 }: EmptyStateProps) {
   const iconMap = {
     'no-products': <PackageOpen className="w-12 h-12 text-gray-300 stroke-[1.5]" />,
@@ -84,15 +88,26 @@ export function EmptyState({
         </div>
       )}
 
-      {onAction && actionLabel && (
-        <button
-          onClick={onAction}
-          type="button"
-          className="inline-flex items-center px-4 py-2 border border-gray-200 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 shadow-sm transition-colors cursor-pointer"
-        >
-          {actionLabel}
-        </button>
-      )}
+      <div className="flex flex-wrap justify-center items-center gap-3">
+        {onAction && actionLabel && (
+          <button
+            onClick={onAction}
+            type="button"
+            className="inline-flex items-center px-4 py-2 border border-gray-200 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 shadow-sm transition-colors cursor-pointer"
+          >
+            {actionLabel}
+          </button>
+        )}
+        {onSecondaryAction && secondaryActionLabel && (
+          <button
+            onClick={onSecondaryAction}
+            type="button"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 shadow-sm transition-colors cursor-pointer"
+          >
+            {secondaryActionLabel}
+          </button>
+        )}
+      </div>
     </div>
   );
 }

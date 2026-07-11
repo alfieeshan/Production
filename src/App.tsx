@@ -28,8 +28,17 @@ import { Settings } from './components/Settings';
 export default function App() {
   // Session State
   const [session, setSession] = useState<any>(null);
-  const [isDemoMode, setIsDemoMode] = useState(false);
+  const [isDemoMode, setIsDemoMode] = useState(() => localStorage.getItem('supabase_showcase_demo') === 'true');
   const [authChecking, setAuthChecking] = useState(true);
+
+  const setDemoModeWithStorage = (val: boolean) => {
+    setIsDemoMode(val);
+    if (val) {
+      localStorage.setItem('supabase_showcase_demo', 'true');
+    } else {
+      localStorage.removeItem('supabase_showcase_demo');
+    }
+  };
 
   // Layout & Navigation State
   const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'add-product' | 'settings'>('dashboard');
@@ -85,7 +94,7 @@ export default function App() {
 
   // Fetch Products from Database
   useEffect(() => {
-    if (isSupabaseConfigured() && (session || isDemoMode)) {
+    if (isDemoMode || (isSupabaseConfigured() && session)) {
       fetchProducts();
     }
   }, [session, isDemoMode, columnMapping]);
@@ -93,6 +102,61 @@ export default function App() {
   const fetchProducts = async () => {
     setLoading(true);
     setErrorState(null);
+
+    if (isDemoMode) {
+      try {
+        const demoStored = localStorage.getItem('supabase_showcase_demo_products');
+        if (demoStored) {
+          const parsed = JSON.parse(demoStored);
+          setRawRows(parsed);
+          setProducts(parsed);
+        } else {
+          // Seed initial products
+          const initialDemoProducts: Product[] = [
+            {
+              id: 'demo-1',
+              name: 'iPhone 15 Pro Max',
+              description: 'Brand new Apple iPhone 15 Pro Max in Natural Titanium. 256GB storage, 100% battery health, fully unlocked. Comes with box and original Apple USB-C cable.',
+              price: 135000,
+              whatsapp_number: '+8801712345678',
+              status: 'active',
+              images: ['https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=800&auto=format&fit=crop&q=80'],
+              created_at: new Date().toISOString()
+            },
+            {
+              id: 'demo-2',
+              name: 'Samsung Galaxy S24 Ultra',
+              description: 'Samsung Galaxy S24 Ultra, Titanium Gray, 12GB RAM, 512GB Storage. 100x Space Zoom camera, includes S-Pen. Pristine condition with 1 year official warranty.',
+              price: 125000,
+              whatsapp_number: '+8801812345678',
+              status: 'active',
+              images: ['https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=800&auto=format&fit=crop&q=80'],
+              created_at: new Date(Date.now() - 86400000).toISOString()
+            },
+            {
+              id: 'demo-3',
+              name: 'Google Pixel 8 Pro',
+              description: 'Google Pixel 8 Pro, Obsidian Black, 128GB. Magic Eraser, Best Take camera features. Smooth 120Hz display, clean stock Android experience. Used for 2 months, look like new.',
+              price: 85000,
+              whatsapp_number: '+8801912345678',
+              status: 'active',
+              images: ['https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=800&auto=format&fit=crop&q=80'],
+              created_at: new Date(Date.now() - 172800000).toISOString()
+            }
+          ];
+          localStorage.setItem('supabase_showcase_demo_products', JSON.stringify(initialDemoProducts));
+          setRawRows(initialDemoProducts);
+          setProducts(initialDemoProducts);
+        }
+      } catch (err: any) {
+        console.error('Demo fetch products error:', err);
+        setErrorState('Unable to load offline demo products.');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
     try {
       const supabase = getSupabase();
       const { data, error } = await supabase
@@ -182,7 +246,7 @@ export default function App() {
   // Logout Handler
   const handleLogout = async () => {
     if (isDemoMode) {
-      setIsDemoMode(false);
+      setDemoModeWithStorage(false);
       setSession(null);
       toast.success('Signed out from demo preview.');
       return;
@@ -200,6 +264,36 @@ export default function App() {
   // CRUD actions: ADD / EDIT submit
   const handleProductSubmit = async (formData: any) => {
     try {
+      if (isDemoMode) {
+        const demoStored = localStorage.getItem('supabase_showcase_demo_products');
+        let demoList: Product[] = demoStored ? JSON.parse(demoStored) : [];
+        
+        const formattedProduct: Product = {
+          id: selectedProduct ? selectedProduct.id : `demo-${Date.now()}`,
+          name: formData.name,
+          description: formData.description || '',
+          price: formData.price,
+          whatsapp_number: formData.whatsapp_number,
+          status: formData.status,
+          images: formData.images,
+          created_at: selectedProduct?.created_at || new Date().toISOString(),
+        };
+
+        if (selectedProduct) {
+          demoList = demoList.map((p) => p.id === selectedProduct.id ? formattedProduct : p);
+          toast.success('Product updated locally (Demo Mode)!');
+        } else {
+          demoList.unshift(formattedProduct);
+          toast.success('Product added locally (Demo Mode)!');
+        }
+
+        localStorage.setItem('supabase_showcase_demo_products', JSON.stringify(demoList));
+        fetchProducts();
+        setSelectedProduct(null);
+        setActiveTab('products');
+        return;
+      }
+
       const supabase = getSupabase();
 
       // Look up schema sample to decide boolean status / array storage type
@@ -254,6 +348,28 @@ export default function App() {
   // CRUD actions: DUPLICATE
   const handleDuplicateProduct = async (product: Product) => {
     try {
+      if (isDemoMode) {
+        const demoStored = localStorage.getItem('supabase_showcase_demo_products');
+        let demoList: Product[] = demoStored ? JSON.parse(demoStored) : [];
+
+        const duplicateProduct: Product = {
+          id: `demo-${Date.now()}`,
+          name: `${product.name} (Copy)`,
+          description: product.description || '',
+          price: product.price,
+          whatsapp_number: product.whatsapp_number,
+          status: 'inactive', // Default duplicate to inactive/draft
+          images: product.images,
+          created_at: new Date().toISOString(),
+        };
+
+        demoList.unshift(duplicateProduct);
+        localStorage.setItem('supabase_showcase_demo_products', JSON.stringify(demoList));
+        toast.success('Product duplicated locally as Draft!');
+        fetchProducts();
+        return;
+      }
+
       const supabase = getSupabase();
       const sampleRow = rawRows.length > 0 ? rawRows[0] : null;
 
@@ -288,6 +404,18 @@ export default function App() {
     if (!selectedProduct) return;
 
     try {
+      if (isDemoMode) {
+        const demoStored = localStorage.getItem('supabase_showcase_demo_products');
+        let demoList: Product[] = demoStored ? JSON.parse(demoStored) : [];
+
+        demoList = demoList.filter((p) => p.id !== selectedProduct.id);
+        localStorage.setItem('supabase_showcase_demo_products', JSON.stringify(demoList));
+        toast.success('Product removed locally.');
+        setSelectedProduct(null);
+        fetchProducts();
+        return;
+      }
+
       const supabase = getSupabase();
 
       // 1. Delete database record
@@ -300,7 +428,15 @@ export default function App() {
 
       // 2. Remove associated images from Supabase Storage bucket
       if (selectedProduct.images && selectedProduct.images.length > 0) {
-        const filePaths = selectedProduct.images
+        const filePathsShop = selectedProduct.images
+          .filter((url) => url.includes('/storage/v1/object/public/Shop/'))
+          .map((url) => {
+            const parts = url.split('/Shop/');
+            return parts.length > 1 ? decodeURIComponent(parts[1]) : '';
+          })
+          .filter(Boolean);
+
+        const filePathsLegacy = selectedProduct.images
           .filter((url) => url.includes('/storage/v1/object/public/product-images/'))
           .map((url) => {
             const parts = url.split('/product-images/');
@@ -308,8 +444,11 @@ export default function App() {
           })
           .filter(Boolean);
 
-        if (filePaths.length > 0) {
-          await supabase.storage.from('product-images').remove(filePaths);
+        if (filePathsShop.length > 0) {
+          await supabase.storage.from('Shop').remove(filePathsShop);
+        }
+        if (filePathsLegacy.length > 0) {
+          await supabase.storage.from('product-images').remove(filePathsLegacy);
         }
       }
 
@@ -325,6 +464,17 @@ export default function App() {
   // BULK ACTIONS: DELETE
   const handleBulkDelete = async (ids: (string | number)[]) => {
     try {
+      if (isDemoMode) {
+        const demoStored = localStorage.getItem('supabase_showcase_demo_products');
+        let demoList: Product[] = demoStored ? JSON.parse(demoStored) : [];
+
+        demoList = demoList.filter((p) => !ids.includes(p.id));
+        localStorage.setItem('supabase_showcase_demo_products', JSON.stringify(demoList));
+        toast.success('Bulk delete executed locally.');
+        fetchProducts();
+        return;
+      }
+
       const supabase = getSupabase();
 
       // Find selected product images to purge
@@ -338,22 +488,31 @@ export default function App() {
       if (error) throw error;
 
       // Purge storage media for all deleted products
-      const allMediaPaths: string[] = [];
+      const allMediaPathsShop: string[] = [];
+      const allMediaPathsLegacy: string[] = [];
       targetProducts.forEach((p) => {
         if (p.images && p.images.length > 0) {
           p.images.forEach((url) => {
-            if (url.includes('/storage/v1/object/public/product-images/')) {
+            if (url.includes('/storage/v1/object/public/Shop/')) {
+              const parts = url.split('/Shop/');
+              if (parts.length > 1) {
+                allMediaPathsShop.push(decodeURIComponent(parts[1]));
+              }
+            } else if (url.includes('/storage/v1/object/public/product-images/')) {
               const parts = url.split('/product-images/');
               if (parts.length > 1) {
-                allMediaPaths.push(decodeURIComponent(parts[1]));
+                allMediaPathsLegacy.push(decodeURIComponent(parts[1]));
               }
             }
           });
         }
       });
 
-      if (allMediaPaths.length > 0) {
-        await supabase.storage.from('product-images').remove(allMediaPaths);
+      if (allMediaPathsShop.length > 0) {
+        await supabase.storage.from('Shop').remove(allMediaPathsShop);
+      }
+      if (allMediaPathsLegacy.length > 0) {
+        await supabase.storage.from('product-images').remove(allMediaPathsLegacy);
       }
 
       toast.success('Bulk delete executed and assets purged.');
@@ -367,6 +526,17 @@ export default function App() {
   // BULK ACTIONS: STATUS UPDATE
   const handleBulkUpdateStatus = async (ids: (string | number)[], status: 'active' | 'inactive') => {
     try {
+      if (isDemoMode) {
+        const demoStored = localStorage.getItem('supabase_showcase_demo_products');
+        let demoList: Product[] = demoStored ? JSON.parse(demoStored) : [];
+
+        demoList = demoList.map((p) => ids.includes(p.id) ? { ...p, status } : p);
+        localStorage.setItem('supabase_showcase_demo_products', JSON.stringify(demoList));
+        toast.success(`Bulk updated selected items to ${status} locally.`);
+        fetchProducts();
+        return;
+      }
+
       const supabase = getSupabase();
       const sampleRow = rawRows.length > 0 ? rawRows[0] : null;
 
@@ -402,6 +572,12 @@ export default function App() {
           description={errorState}
           actionLabel="Open Database Settings"
           onAction={() => setActiveTab('settings')}
+          secondaryActionLabel="Switch to Offline Demo Mode"
+          onSecondaryAction={() => {
+            setDemoModeWithStorage(true);
+            setErrorState(null);
+            toast.success('Switched to fully functional offline demo mode!');
+          }}
         />
       );
     }
@@ -583,6 +759,7 @@ export default function App() {
                 setSelectedProduct(null);
                 setActiveTab('products');
               }}
+              isDemo={isDemoMode}
               onPreview={(data) => {
                 const mockupProduct: Product = {
                   id: selectedProduct?.id || 'NEW_TEMP',
@@ -590,7 +767,7 @@ export default function App() {
                   description: data.description || '',
                   price: data.price,
                   whatsapp_number: data.whatsapp_number,
-                  status: data.status === 'active',
+                  status: data.status === 'active' ? 'active' : 'inactive',
                   images: data.images,
                 };
                 setSelectedProduct(mockupProduct);
@@ -637,7 +814,7 @@ export default function App() {
         <Login
           onLoginSuccess={(activeSession) => setSession(activeSession)}
           onBypassDev={() => {
-            setIsDemoMode(true);
+            setDemoModeWithStorage(true);
             toast.success('Bypassed to offline developer preview!');
           }}
         />
