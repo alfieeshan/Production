@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Upload, X, ArrowLeft, ArrowRight, Image as ImageIcon, Sparkles, AlertCircle, ShieldAlert } from 'lucide-react';
+import { Upload, X, ArrowLeft, ArrowRight, Image as ImageIcon, AlertCircle, ShieldAlert } from 'lucide-react';
 import { getSupabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 
