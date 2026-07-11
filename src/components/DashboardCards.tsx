@@ -1,5 +1,5 @@
 import React from 'react';
-import { Package, CheckCircle2, XCircle, Sparkles, Phone, DollarSign } from 'lucide-react';
+import { Package, CheckCircle2, XCircle, , Phone, DollarSign } from 'lucide-react';
 import { DashboardStats, Product } from '../types';
 
 interface DashboardCardsProps {
