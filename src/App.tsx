@@ -671,27 +671,6 @@ export default function App() {
                     </button>
                   </div>
                 </div>
-
-                {/* Database Quick Guide card */}
-                <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-xs space-y-3 text-xs">
-                  <h4 className="font-bold text-gray-900 uppercase tracking-wide flex items-center gap-1.5">
-                    <Smartphone className="w-4 h-4 text-[#25D366]" /> Product Table Specs
-                  </h4>
-                  <p className="text-gray-500 leading-relaxed">
-                    This admin panel connects securely to your table named <code>products</code>.
-                  </p>
-                  <div className="bg-gray-50 p-2.5 rounded-lg border border-gray-150 font-mono text-[10px] text-gray-600 space-y-1">
-                    <div>• Name: VARCHAR (Text)</div>
-                    <div>• Description: TEXT</div>
-                    <div>• Price: NUMERIC / FLOAT</div>
-                    <div>• WhatsApp: VARCHAR</div>
-                    <div>• Status: TEXT / BOOLEAN</div>
-                    <div>• Images: VARCHAR[] / JSONB</div>
-                  </div>
-                  <p className="text-[10px] text-gray-400 italic">
-                    If columns differ, you can map them under settings in seconds!
-                  </p>
-                </div>
               </div>
             </div>
           </div>
